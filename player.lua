@@ -1,5 +1,6 @@
 
 local checkCollision = require("collision")
+local bullet = require("bullet")
 local Player = {}
 Player.__index = Player
 
@@ -86,6 +87,14 @@ function Player:hit(damage)
         -- Play player hurt sound
         love.audio.play(playerHurtSound)
     end
+end
+
+function Player:shootTriple(bullets, shootSound)
+    local angleOffset = math.rad(15) -- 15 degrees offset for the side bullets
+    table.insert(bullets, bullet.new(self.x, self.y, self.rotation - angleOffset))
+    table.insert(bullets, bullet.new(self.x, self.y, self.rotation))
+    table.insert(bullets, bullet.new(self.x, self.y, self.rotation + angleOffset))
+    playSound(shootSound, true)
 end
 
 return Player

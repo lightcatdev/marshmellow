@@ -26,7 +26,7 @@ local scoreFont = love.graphics.newFont(36) -- Define a font for the score
 -- Enemy variables
 local enemies = {} -- Table to store enemies
 local enemySpawnTimer = 0
-local enemySpawnInterval = 2 -- Spawn new enemy every 2 seconds
+local enemySpawnInterval = 4 -- Spawn new enemy every 4 seconds
 
 -- Bullets table
 local bullets = {} -- Table to store bullets
@@ -101,10 +101,6 @@ function love.update(dt)
 end
 
 function love.draw()
-    -- Draw score UI
-    love.graphics.setFont(scoreFont)
-    love.graphics.printf("Score: " .. score, 0, 20, love.graphics.getWidth(), "center")
-
     love.graphics.push()
     love.graphics.translate(-cameraX, -cameraY) -- Translate by the negative of the camera position
 
@@ -112,15 +108,6 @@ function love.draw()
     local shakeX = love.math.random(-screenShakeMagnitude, screenShakeMagnitude)
     local shakeY = love.math.random(-screenShakeMagnitude, screenShakeMagnitude)
     love.graphics.translate(shakeX, shakeY)
-
-    -- Draw player health bar
-    local healthBarWidth = 200
-    local healthBarHeight = 20
-    local healthBarX = cameraX + 20 -- Adjust position based on camera
-    local healthBarY = cameraY + love.graphics.getHeight() - 40 -- Bottom of the screen
-    love.graphics.setColor(255, 0, 0) -- Red color
-    love.graphics.rectangle("fill", healthBarX, healthBarY, healthBarWidth * (player.health / 100), healthBarHeight)
-    love.graphics.setColor(255, 255, 255) -- Reset color
 
     player:draw()
     for _, bullet in ipairs(bullets) do
@@ -130,7 +117,20 @@ function love.draw()
         enemy:draw()
     end
 
-    love.graphics.pop()
+    love.graphics.pop() -- Reset translation
+
+    -- Draw player health bar above everything else
+    local healthBarWidth = 200
+    local healthBarHeight = 20
+    local healthBarX = 20 -- Adjust position based on camera
+    local healthBarY = love.graphics.getHeight() - 40 -- Bottom of the screen
+    love.graphics.setColor(255, 0, 0) -- Red color
+    love.graphics.rectangle("fill", healthBarX, healthBarY, healthBarWidth * (player.health / 100), healthBarHeight)
+    love.graphics.setColor(255, 255, 255) -- Reset color
+
+    -- Draw score UI
+    love.graphics.setFont(scoreFont)
+    love.graphics.printf("Score: " .. score, 0, 20, love.graphics.getWidth(), "center")
 end
 
 function startScreenShake(duration, magnitude)
@@ -182,3 +182,13 @@ function spawnEnemy()
     table.insert(enemies, enemy)
 end
 
+function love.mousepressed(x, y, button)
+    if button == 1 and player.timeSinceLastShot >= player.shootCooldown then
+        table.insert(bullets, Bullet.new(player.x, player.y, player.rotation))
+        playSound(shootSound, true)
+        player.timeSinceLastShot = 0
+    elseif button == 2 and player.timeSinceLastShot >= player.shootCooldown then
+        player:shootTriple(bullets, shootSound)
+        player.timeSinceLastShot = 0
+    end
+end
