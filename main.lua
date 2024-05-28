@@ -27,13 +27,18 @@ local cameraSpeed = 5 -- Adjust as needed for desired smoothness
 local score = 0
 local scoreFont = love.graphics.newFont(36) -- Define a font for the score
 
+-- Enemy variables
+local enemies = {} -- Table to store enemies
+local enemySpawnTimer = 0
+local enemySpawnInterval = 5 -- Spawn new enemy every 5 seconds
+
+-- Bullets table
+local bullets = {} -- Table to store bullets
 
 function love.load()
-    -- Initialize player and target
+    -- Initialize player
     player = Player.new(400, 300, 40)
-    target = Target.new(500, 300, 80, 100) -- Target with 100 health
-    bullets = {}
-
+    
     -- Load sounds
     shootSound = love.audio.newSource("sounds/Shoot.wav", "static")
     explosionSound = love.audio.newSource("sounds/Explosion.wav", "static")
@@ -57,20 +62,36 @@ function love.update(dt)
 
         if bullet:isOffScreen(cameraX, cameraY, love.graphics.getWidth(), love.graphics.getHeight()) then
             table.remove(bullets, i)
-        elseif target and checkCollision(bullet, target) then
-            local damage = math.random(10, 20) -- Random damage between 10 and 20
-            target:hit(damage) -- Pass the damage value to the hit function
-            playSound(hitSound, false)
-            table.insert(damageCounters, DamageCounter.new(bullet.x, bullet.y, damage)) -- Pass damage to damage counter
-            table.remove(bullets, i)
-            score = score + math.random(100,250)
+        else
+            -- Check collision with all enemies
+            for j, enemy in ipairs(enemies) do
+                if checkCollision(bullet, enemy) then
+                    local damage = math.random(5, 8) -- Random damage between 5 and 8
+                    enemy:hit(damage)
+                    playSound(hitSound, false)
+                    table.insert(damageCounters, DamageCounter.new(bullet.x, bullet.y, damage))
+                    table.remove(bullets, i)
+                    score = score + math.random(100, 250)
+                    break -- Exit loop after hitting one enemy
+                end
+            end
         end
     end
 
-    if target then
-        target:update(dt, player)
-        if target:isDead() then
-            target = nil
+    -- Update enemy spawning
+    enemySpawnTimer = enemySpawnTimer + dt
+    if enemySpawnTimer >= enemySpawnInterval then
+        spawnEnemy()
+        enemySpawnTimer = 0
+    end
+
+    -- Update enemies
+    for i = #enemies, 1, -1 do
+        local enemy = enemies[i]
+        enemy:update(dt, player)
+
+        if enemy:isDead() then
+            table.remove(enemies, i)
             playSound(explosionSound, false)
             startScreenShake(0.5, 5)
         end
@@ -92,6 +113,8 @@ function love.update(dt)
 end
 
 
+
+
 function love.draw()
     -- Draw score UI
     love.graphics.setFont(scoreFont)
@@ -107,6 +130,9 @@ function love.draw()
     player:draw()
     for _, bullet in ipairs(bullets) do
         bullet:draw()
+    end
+    for _, enemy in ipairs(enemies) do
+        enemy:draw()
     end
     if target then
         target:draw()
@@ -135,7 +161,6 @@ function updateScreenShake(dt)
     end
 end
 
-
 function playSound(sound, pitchRandomization)
     if pitchRandomization == true then
         local pitch = love.math.random(0.8, 1.2)
@@ -147,4 +172,10 @@ end
 -- Linear interpolation function
 function lerp(a, b, t)
     return a + (b - a) * t
+end
+
+function spawnEnemy()
+    local enemy = Target.new(math.random(100, love.graphics.getWidth() - 100), math.random(100, love.graphics.getHeight() - 100), 40)
+    table.insert(enemies, enemy)
+    print("Enemy")
 end

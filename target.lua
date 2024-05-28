@@ -2,13 +2,15 @@ local Target = {}
 Target.__index = Target
 
 function Target.new(x, y, size, health)
+    health = health or 100 -- Default initial health is 100
     local self = setmetatable({}, Target)
     self.x = x
     self.y = y
-    self.size = size
-    self.initialSize = size
+    self.size = size * 2
+    self.initialSize = size * 2 -- Set initial size attribute
+    self.minSize = self.initialSize / 2 -- Set minimum size to half the initial size
     self.color = {1, 1, 1} -- Initial color (white)
-    self.shrinkFactor = 0.9 -- Shrink to 90% its size
+    self.shrinkSize = self.minSize -- Size to shrink to when hit
     self.growSpeed = 2 -- Speed at which it grows back
     self.isHit = false -- Hit status
     self.hitTime = 0 -- Time since last hit
@@ -45,11 +47,9 @@ function Target:update(dt, player)
         end
     end
 
+    -- Smoothly grow back to initial size if it's smaller
     if self.size < self.initialSize then
-        self.size = self.size + self.growSpeed * dt * (self.initialSize - self.size)
-        if self.size > self.initialSize then
-            self.size = self.initialSize
-        end
+        self.size = self:lerpSize(self.size, self.initialSize, self.growSpeed * dt)
     end
 end
 
@@ -57,6 +57,11 @@ function Target:lerpAngle(a, b, t)
     local difference = b - a
     local shortest_angle = ((difference + math.pi) % (2 * math.pi)) - math.pi
     return a + shortest_angle * t
+end
+
+function Target:lerpSize(currentSize, targetSize, speed)
+    -- Perform linear interpolation to smoothly grow the size back to initial size
+    return currentSize + (targetSize - currentSize) * speed
 end
 
 function Target:draw()
@@ -75,7 +80,7 @@ end
 
 function Target:hit(damage)
     self.isHit = true
-    self.size = self.size * self.shrinkFactor
+    self.size = self.minSize -- Set size to the minimum size when hit
     self.health = self.health - damage -- Decrease health based on damage received
 end
 
