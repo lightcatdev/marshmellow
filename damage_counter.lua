@@ -30,11 +30,11 @@ function DamageCounter.new(x, y, damage)
     end
 
     function self:draw()
+        love.graphics.setFont(love.graphics.newFont()) -- Reset font to default
         love.graphics.setColor(255, 255, 255, self.alpha)
         love.graphics.print(self.damage, self.x, self.y)
         love.graphics.setColor(255, 255, 255, 255) -- Reset color
-    end
-
+    end    
     return self
 end
 

@@ -23,6 +23,11 @@ local cameraX = 0
 local cameraY = 0
 local cameraSpeed = 5 -- Adjust as needed for desired smoothness
 
+-- Score variables
+local score = 0
+local scoreFont = love.graphics.newFont(36) -- Define a font for the score
+
+
 function love.load()
     -- Initialize player and target
     player = Player.new(400, 300, 40)
@@ -58,6 +63,7 @@ function love.update(dt)
             playSound(hitSound, false)
             table.insert(damageCounters, DamageCounter.new(bullet.x, bullet.y, damage)) -- Pass damage to damage counter
             table.remove(bullets, i)
+            score = score + math.random(100,250)
         end
     end
 
@@ -85,7 +91,11 @@ function love.update(dt)
     updateScreenShake(dt)
 end
 
+
 function love.draw()
+    -- Draw score UI
+    love.graphics.setFont(scoreFont)
+    love.graphics.printf("Score: " .. score, 0, 20, love.graphics.getWidth(), "center")
     love.graphics.push()
     love.graphics.translate(-cameraX, -cameraY) -- Translate by the negative of the camera position
 
