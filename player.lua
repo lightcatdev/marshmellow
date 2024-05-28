@@ -21,6 +21,7 @@ function Player.new(x, y, size)
     self.shootCooldown = 0.07
     self.timeSinceLastShot = 0
     self.health = 100 -- Initial health
+    self.ammo = 32 -- Initial ammo
     return self
 end
 
@@ -90,11 +91,14 @@ function Player:hit(damage)
 end
 
 function Player:shootTriple(bullets, shootSound)
-    local angleOffset = math.rad(15) -- 15 degrees offset for the side bullets
-    table.insert(bullets, bullet.new(self.x, self.y, self.rotation - angleOffset))
-    table.insert(bullets, bullet.new(self.x, self.y, self.rotation))
-    table.insert(bullets, bullet.new(self.x, self.y, self.rotation + angleOffset))
-    playSound(shootSound, true)
+    if self.ammo >= 3 then
+        local angleOffset = math.rad(15) -- 15 degrees offset for the side bullets
+        table.insert(bullets, bullet.new(self.x, self.y, self.rotation - angleOffset))
+        table.insert(bullets, bullet.new(self.x, self.y, self.rotation))
+        table.insert(bullets, bullet.new(self.x, self.y, self.rotation + angleOffset))
+        playSound(shootSound, true)
+        self.ammo = self.ammo - 3
+    end
 end
 
 return Player

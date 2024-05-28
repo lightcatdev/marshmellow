@@ -13,6 +13,7 @@ local screenShakeTime = 0
 local shootSound
 local explosionSound
 local hitSound
+local outOfAmmo
 
 -- Camera variables
 local cameraX = 0
@@ -39,16 +40,19 @@ function love.load()
     shootSound = love.audio.newSource("sounds/Shoot.wav", "static")
     explosionSound = love.audio.newSource("sounds/Explosion.wav", "static")
     hitSound = love.audio.newSource("sounds/Hit.wav", "static")
+    outOfAmmo = love.audio.newSource("sounds/Click.wav", "static")
 end
 
 function love.update(dt)
     player:update(dt, cameraX, cameraY)
 
     -- Shooting bullets
-    if love.mouse.isDown(1) and player.timeSinceLastShot >= player.shootCooldown then
+    if love.mouse.isDown(1) and player.timeSinceLastShot >= player.shootCooldown and player.ammo >= 1 then
         table.insert(bullets, Bullet.new(player.x, player.y, player.rotation))
         playSound(shootSound, true)
         player.timeSinceLastShot = 0
+        player.ammo = player.ammo - 1
+        print(player.ammo)
     end
 
     -- Update bullets
@@ -183,12 +187,11 @@ function spawnEnemy()
 end
 
 function love.mousepressed(x, y, button)
-    if button == 1 and player.timeSinceLastShot >= player.shootCooldown then
-        table.insert(bullets, Bullet.new(player.x, player.y, player.rotation))
-        playSound(shootSound, true)
-        player.timeSinceLastShot = 0
-    elseif button == 2 and player.timeSinceLastShot >= player.shootCooldown then
+    if button == 2 and player.timeSinceLastShot >= player.shootCooldown and player.ammo >= 3 then
         player:shootTriple(bullets, shootSound)
         player.timeSinceLastShot = 0
+        print(player.ammo)
+    elseif player.ammo <= 0 then
+        playSound(outOfAmmo, false)
     end
 end
