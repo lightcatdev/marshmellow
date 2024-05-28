@@ -17,7 +17,7 @@ function Player.new(x, y, size)
     return self
 end
 
-function Player:update(dt)
+function Player:update(dt, cameraX, cameraY)
     self.timeSinceLastShot = self.timeSinceLastShot + dt
 
     local dx, dy = 0, 0
@@ -53,8 +53,12 @@ function Player:update(dt)
     self.y = self.y + self.velocityY * dt
 
     local mouseX, mouseY = love.mouse.getPosition()
+    mouseX = mouseX + cameraX -- Adjust mouse position based on camera
+    mouseY = mouseY + cameraY -- Adjust mouse position based on camera
     self.rotation = math.atan2(mouseY - self.y, mouseX - self.x)
 end
+
+
 
 function Player:draw()
     love.graphics.push()

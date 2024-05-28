@@ -23,8 +23,16 @@ function Bullet:draw()
     love.graphics.setColor(1, 1, 1) -- Reset color to white
 end
 
-function Bullet:isOffScreen()
-    return self.x < 0 or self.x > love.graphics.getWidth() or self.y < 0 or self.y > love.graphics.getHeight()
+function Bullet:isOffScreen(cameraX, cameraY, screenWidth, screenHeight)
+    -- Calculate the visible area considering the camera position
+    local leftEdge = cameraX
+    local rightEdge = cameraX + screenWidth
+    local topEdge = cameraY
+    local bottomEdge = cameraY + screenHeight
+
+    -- Check if the bullet is outside the visible area
+    return self.x < leftEdge or self.x > rightEdge or self.y < topEdge or self.y > bottomEdge
 end
+
 
 return Bullet

@@ -36,7 +36,7 @@ function love.load()
 end
 
 function love.update(dt)
-    player:update(dt)
+    player:update(dt, cameraX, cameraY)
 
     -- Shooting bullets
     if love.mouse.isDown(1) and player.timeSinceLastShot >= player.shootCooldown then
@@ -50,13 +50,13 @@ function love.update(dt)
         local bullet = bullets[i]
         bullet:update(dt)
 
-        if target and checkCollision(bullet, target) then
+        if bullet:isOffScreen(cameraX, cameraY, love.graphics.getWidth(), love.graphics.getHeight()) then
+            table.remove(bullets, i)
+        elseif target and checkCollision(bullet, target) then
             local damage = math.random(10, 20) -- Random damage between 10 and 20
             target:hit(damage) -- Pass the damage value to the hit function
             playSound(hitSound, false)
             table.insert(damageCounters, DamageCounter.new(bullet.x, bullet.y, damage)) -- Pass damage to damage counter
-            table.remove(bullets, i)
-        elseif bullet:isOffScreen() then
             table.remove(bullets, i)
         end
     end
