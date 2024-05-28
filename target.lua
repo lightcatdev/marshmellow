@@ -17,13 +17,16 @@ function Target.new(x, y, size, health)
     self.hitCooldown = 0.2 -- Time to flash red
     self.colorLerpSpeed = 5 -- Speed at which color changes back to white
     self.followSpeed = 100 -- Speed at which the target follows the player
-    self.rotation = 0 -- Rotation to look at the player
-    self.rotationSpeed = 5 -- Speed of rotation interpolation
+    self.rotation = 0 -- Initial rotation
+    self.rotationSpeed = 2 -- Speed of rotation
     self.health = health -- Initial health
     return self
 end
 
 function Target:update(dt, player)
+    -- Spin constantly
+    self.rotation = self.rotation + self.rotationSpeed * dt
+
     -- Follow the player
     local directionX = player.x - self.x
     local directionY = player.y - self.y
@@ -35,10 +38,6 @@ function Target:update(dt, player)
         self.x = self.x + moveX
         self.y = self.y + moveY
     end
-
-    -- Smoothly rotate to look at the player
-    local targetRotation = math.atan2(player.y - self.y, player.x - self.x)
-    self.rotation = self:lerpAngle(self.rotation, targetRotation, self.rotationSpeed * dt)
 
     -- Grow back to initial size if it's smaller
     if self.size < self.initialSize then
@@ -62,14 +61,9 @@ function Target:update(dt, player)
     end
 end
 
+
 function Target:lerp(a, b, t)
     return a + (b - a) * t
-end
-
-function Target:lerpAngle(a, b, t)
-    local difference = b - a
-    local shortest_angle = ((difference + math.pi) % (2 * math.pi)) - math.pi
-    return a + shortest_angle * t
 end
 
 function Target:lerpSize(currentSize, targetSize, speed)
