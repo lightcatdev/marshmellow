@@ -3,7 +3,6 @@ local Player = require("player")
 local Bullet = require("bullet")
 local Target = require("target")
 local checkCollision = require("collision")
-local DamageCounter = require("damage_counter")
 
 -- Screen shake variables
 local screenShakeMagnitude = 0
@@ -14,9 +13,6 @@ local screenShakeTime = 0
 local shootSound
 local explosionSound
 local hitSound
-
--- Damage counters
-local damageCounters = {}
 
 -- Camera variables
 local cameraX = 0
@@ -30,7 +26,7 @@ local scoreFont = love.graphics.newFont(36) -- Define a font for the score
 -- Enemy variables
 local enemies = {} -- Table to store enemies
 local enemySpawnTimer = 0
-local enemySpawnInterval = 5 -- Spawn new enemy every 5 seconds
+local enemySpawnInterval = 2 -- Spawn new enemy every 2 seconds
 
 -- Bullets table
 local bullets = {} -- Table to store bullets
@@ -63,45 +59,30 @@ function love.update(dt)
         if bullet:isOffScreen(cameraX, cameraY, love.graphics.getWidth(), love.graphics.getHeight()) then
             table.remove(bullets, i)
         else
-            -- Check collision with all enemies
-            for j, enemy in ipairs(enemies) do
+            for j = #enemies, 1, -1 do
+                local enemy = enemies[j]
                 if checkCollision(bullet, enemy) then
                     local damage = math.random(5, 8) -- Random damage between 5 and 8
-                    enemy:hit(damage)
+                    enemy:hit(damage) -- Pass the damage value to the hit function
                     playSound(hitSound, false)
-                    table.insert(damageCounters, DamageCounter.new(bullet.x, bullet.y, damage))
                     table.remove(bullets, i)
                     score = score + math.random(100, 250)
-                    break -- Exit loop after hitting one enemy
+                    if enemy:isDead() then
+                        table.remove(enemies, j)
+                        playSound(explosionSound, false)
+                        startScreenShake(0.5, 5)
+                    end
+                    break
                 end
             end
         end
     end
 
-    -- Update enemy spawning
-    enemySpawnTimer = enemySpawnTimer + dt
-    if enemySpawnTimer >= enemySpawnInterval then
-        spawnEnemy()
-        enemySpawnTimer = 0
-    end
-
     -- Update enemies
-    for i = #enemies, 1, -1 do
-        local enemy = enemies[i]
+    for _, enemy in ipairs(enemies) do
         enemy:update(dt, player)
-
-        if enemy:isDead() then
-            table.remove(enemies, i)
-            playSound(explosionSound, false)
-            startScreenShake(0.5, 5)
-        end
-    end
-
-    -- Update damage counters
-    for i = #damageCounters, 1, -1 do
-        local counter = damageCounters[i]
-        if counter:update(dt) then
-            table.remove(damageCounters, i)
+        if checkCollision(player, enemy) then
+            player:hit(1) -- Decrease player's health when colliding with enemy
         end
     end
 
@@ -110,10 +91,14 @@ function love.update(dt)
     cameraY = lerp(cameraY, player.y - love.graphics.getHeight() / 2, cameraSpeed * dt)
 
     updateScreenShake(dt)
+
+    -- Spawn new enemies
+    enemySpawnTimer = enemySpawnTimer + dt
+    if enemySpawnTimer >= enemySpawnInterval then
+        spawnEnemy()
+        enemySpawnTimer = 0
+    end
 end
-
-
-
 
 function love.draw()
     -- Draw score UI
@@ -133,12 +118,6 @@ function love.draw()
     end
     for _, enemy in ipairs(enemies) do
         enemy:draw()
-    end
-    if target then
-        target:draw()
-    end
-    for _, counter in ipairs(damageCounters) do
-        counter:draw()
     end
 
     love.graphics.pop()
@@ -175,7 +154,6 @@ function lerp(a, b, t)
 end
 
 function spawnEnemy()
-    local enemy = Target.new(math.random(100, love.graphics.getWidth() - 100), math.random(100, love.graphics.getHeight() - 100), 40)
+    local enemy = Target.new(cameraX + math.random(100, love.graphics.getWidth() - 100), cameraY + math.random(100, love.graphics.getHeight() - 100), 40)
     table.insert(enemies, enemy)
-    print("Enemy")
 end

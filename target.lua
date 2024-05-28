@@ -8,13 +8,14 @@ function Target.new(x, y, size, health)
     self.y = y
     self.size = size * 2
     self.initialSize = size * 2 -- Set initial size attribute
-    self.minSize = self.initialSize / 2 -- Set minimum size to half the initial size
     self.color = {1, 1, 1} -- Initial color (white)
-    self.shrinkSize = self.minSize -- Size to shrink to when hit
+    self.targetColor = {1, 1, 1} -- Target color for interpolation
+    self.shrinkFactor = 0.9 -- Shrink to 90% its size when hit
     self.growSpeed = 2 -- Speed at which it grows back
     self.isHit = false -- Hit status
     self.hitTime = 0 -- Time since last hit
     self.hitCooldown = 0.2 -- Time to flash red
+    self.colorLerpSpeed = 5 -- Speed at which color changes back to white
     self.followSpeed = 100 -- Speed at which the target follows the player
     self.rotation = 0 -- Rotation to look at the player
     self.rotationSpeed = 5 -- Speed of rotation interpolation
@@ -39,18 +40,30 @@ function Target:update(dt, player)
     local targetRotation = math.atan2(player.y - self.y, player.x - self.x)
     self.rotation = self:lerpAngle(self.rotation, targetRotation, self.rotationSpeed * dt)
 
+    -- Grow back to initial size if it's smaller
+    if self.size < self.initialSize then
+        self.size = self:lerpSize(self.size, self.initialSize, self.growSpeed * dt)
+    end
+
+    -- Smoothly transition the color back to white
+    self.color = {
+        self:lerp(self.color[1], self.targetColor[1], self.colorLerpSpeed * dt),
+        self:lerp(self.color[2], self.targetColor[2], self.colorLerpSpeed * dt),
+        self:lerp(self.color[3], self.targetColor[3], self.colorLerpSpeed * dt)
+    }
+
     if self.isHit then
         self.hitTime = self.hitTime + dt
         if self.hitTime >= self.hitCooldown then
             self.isHit = false
             self.hitTime = 0
+            self.targetColor = {1, 1, 1} -- Transition back to white
         end
     end
+end
 
-    -- Smoothly grow back to initial size if it's smaller
-    if self.size < self.initialSize then
-        self.size = self:lerpSize(self.size, self.initialSize, self.growSpeed * dt)
-    end
+function Target:lerp(a, b, t)
+    return a + (b - a) * t
 end
 
 function Target:lerpAngle(a, b, t)
@@ -68,11 +81,7 @@ function Target:draw()
     love.graphics.push()
     love.graphics.translate(self.x, self.y)
     love.graphics.rotate(self.rotation)
-    if self.isHit then
-        love.graphics.setColor(1, 0, 0) -- Red color
-    else
-        love.graphics.setColor(self.color)
-    end
+    love.graphics.setColor(self.color)
     love.graphics.rectangle("fill", -self.size / 2, -self.size / 2, self.size, self.size)
     love.graphics.pop()
     love.graphics.setColor(1, 1, 1) -- Reset color to white
@@ -80,8 +89,12 @@ end
 
 function Target:hit(damage)
     self.isHit = true
-    self.size = self.minSize -- Set size to the minimum size when hit
+    self.size = self.size * self.shrinkFactor -- Shrink to 90% of current size
+    if self.size < self.initialSize * 0.5 then
+        self.size = self.initialSize * 0.5 -- Ensure size doesn't go below 50% of initial size
+    end
     self.health = self.health - damage -- Decrease health based on damage received
+    self.targetColor = {1, 0, 0} -- Transition to red when hit
 end
 
 function Target:isDead()

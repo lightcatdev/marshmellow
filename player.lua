@@ -1,3 +1,4 @@
+
 local checkCollision = require("collision")
 local Player = {}
 Player.__index = Player
