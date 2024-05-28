@@ -104,6 +104,7 @@ function love.draw()
     -- Draw score UI
     love.graphics.setFont(scoreFont)
     love.graphics.printf("Score: " .. score, 0, 20, love.graphics.getWidth(), "center")
+
     love.graphics.push()
     love.graphics.translate(-cameraX, -cameraY) -- Translate by the negative of the camera position
 
@@ -111,6 +112,15 @@ function love.draw()
     local shakeX = love.math.random(-screenShakeMagnitude, screenShakeMagnitude)
     local shakeY = love.math.random(-screenShakeMagnitude, screenShakeMagnitude)
     love.graphics.translate(shakeX, shakeY)
+
+    -- Draw player health bar
+    local healthBarWidth = 200
+    local healthBarHeight = 20
+    local healthBarX = cameraX + 20 -- Adjust position based on camera
+    local healthBarY = cameraY + love.graphics.getHeight() - 40 -- Bottom of the screen
+    love.graphics.setColor(255, 0, 0) -- Red color
+    love.graphics.rectangle("fill", healthBarX, healthBarY, healthBarWidth * (player.health / 100), healthBarHeight)
+    love.graphics.setColor(255, 255, 255) -- Reset color
 
     player:draw()
     for _, bullet in ipairs(bullets) do
@@ -154,6 +164,21 @@ function lerp(a, b, t)
 end
 
 function spawnEnemy()
-    local enemy = Target.new(cameraX + math.random(100, love.graphics.getWidth() - 100), cameraY + math.random(100, love.graphics.getHeight() - 100), 40)
+    local spawnX, spawnY
+    local buffer = 100 -- Buffer distance to ensure enemies spawn off-screen
+
+    -- Randomly determine spawn position off-screen
+    if math.random() < 0.5 then
+        -- Spawn horizontally
+        spawnX = cameraX + (math.random() < 0.5 and -buffer or love.graphics.getWidth() + buffer)
+        spawnY = cameraY + math.random(love.graphics.getHeight())
+    else
+        -- Spawn vertically
+        spawnX = cameraX + math.random(love.graphics.getWidth())
+        spawnY = cameraY + (math.random() < 0.5 and -buffer or love.graphics.getHeight() + buffer)
+    end
+
+    local enemy = Target.new(spawnX, spawnY, 40)
     table.insert(enemies, enemy)
 end
+
