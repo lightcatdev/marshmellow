@@ -3,6 +3,7 @@ local Player = require("player")
 local Bullet = require("bullet")
 local Target = require("target")
 local checkCollision = require("collision")
+local Ammo = require("ammo")
 
 -- Screen shake variables
 local screenShakeMagnitude = 0
@@ -31,6 +32,9 @@ local enemySpawnInterval = 4 -- Spawn new enemy every 4 seconds
 
 -- Bullets table
 local bullets = {} -- Table to store bullets
+
+-- Ammos table
+local ammos = {} -- Table to store ammos
 
 function love.load()
     -- Initialize player
@@ -75,6 +79,7 @@ function love.update(dt)
                         table.remove(enemies, j)
                         playSound(explosionSound, false)
                         startScreenShake(0.5, 5)
+                        spawnAmmo(enemy:returnPos())
                     end
                     break
                 end
@@ -87,6 +92,18 @@ function love.update(dt)
         enemy:update(dt, player)
         if checkCollision(player, enemy) then
             player:hit(1) -- Decrease player's health when colliding with enemy
+        end
+    end
+
+    -- Update ammos
+    for i = #ammos, 1, -1 do
+        local ammo = ammos[i]
+        ammo:update(dt)
+        if checkCollision(player, ammo) then
+            table.remove(ammos, i)
+            -- Add ammo pickup functionality here (e.g., increase player's ammo count)
+            player.ammo = player.ammo + math.random(16, 32)
+            print(player.ammo)
         end
     end
 
@@ -119,6 +136,9 @@ function love.draw()
     end
     for _, enemy in ipairs(enemies) do
         enemy:draw()
+    end
+    for _, ammo in ipairs(ammos) do
+        ammo:draw()
     end
 
     love.graphics.pop() -- Reset translation
@@ -184,6 +204,11 @@ function spawnEnemy()
 
     local enemy = Target.new(spawnX, spawnY, 40)
     table.insert(enemies, enemy)
+end
+
+function spawnAmmo(spawnX, spawnY)
+    local ammo = Ammo.new(spawnX, spawnY)
+    table.insert(ammos, ammo)
 end
 
 function love.mousepressed(x, y, button)

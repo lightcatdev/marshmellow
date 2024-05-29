@@ -95,4 +95,8 @@ function Target:isDead()
     return self.health <= 0
 end
 
+function Target:returnPos()
+    return self.x, self.y
+end
+
 return Target
