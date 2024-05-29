@@ -14,7 +14,8 @@ local screenShakeTime = 0
 local shootSound
 local explosionSound
 local hitSound
-local outOfAmmo
+local outOfAmmoSound
+local getAmmoSound
 
 -- Camera variables
 local cameraX = 0
@@ -44,7 +45,8 @@ function love.load()
     shootSound = love.audio.newSource("sounds/Shoot.wav", "static")
     explosionSound = love.audio.newSource("sounds/Explosion.wav", "static")
     hitSound = love.audio.newSource("sounds/Hit.wav", "static")
-    outOfAmmo = love.audio.newSource("sounds/Click.wav", "static")
+    outOfAmmoSound = love.audio.newSource("sounds/Click.wav", "static")
+    getAmmoSound = love.audio.newSource("sounds/Ammo.wav", "static")
 end
 
 function love.update(dt)
@@ -103,7 +105,9 @@ function love.update(dt)
             table.remove(ammos, i)
             -- Add ammo pickup functionality here (e.g., increase player's ammo count)
             player.ammo = player.ammo + math.random(16, 32)
-            print(player.ammo)
+            playSound(getAmmoSound, false)
+            score = score + 500
+            player.health = player.health + 10
         end
     end
 
@@ -217,6 +221,6 @@ function love.mousepressed(x, y, button)
         player.timeSinceLastShot = 0
         print(player.ammo)
     elseif player.ammo <= 0 then
-        playSound(outOfAmmo, false)
+        playSound(outOfAmmoSound, false)
     end
 end

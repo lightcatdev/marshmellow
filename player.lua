@@ -69,6 +69,9 @@ function Player:update(dt, cameraX, cameraY)
     if target and checkCollision(self, target) then
         self:hit(1) -- Player takes 1 damage
     end
+    if player.health >= 100 then
+        player.health = 100
+    end
 end
 
 function Player:draw()
