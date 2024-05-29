@@ -6,8 +6,8 @@ function Target.new(x, y, size, health)
     local self = setmetatable({}, Target)
     self.x = x
     self.y = y
-    self.size = size * 2
-    self.initialSize = size * 2 -- Set initial size attribute
+    self.size = size
+    self.initialSize = size -- Set initial size attribute
     self.color = {1, 1, 1} -- Initial color (white)
     self.targetColor = {1, 1, 1} -- Target color for interpolation
     self.shrinkFactor = 0.9 -- Shrink to 90% its size when hit

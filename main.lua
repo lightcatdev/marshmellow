@@ -202,7 +202,7 @@ function spawnEnemy()
         spawnY = cameraY + (math.random() < 0.5 and -buffer or love.graphics.getHeight() + buffer)
     end
 
-    local enemy = Target.new(spawnX, spawnY, 40)
+    local enemy = Target.new(spawnX, spawnY, 80)
     table.insert(enemies, enemy)
 end
 
